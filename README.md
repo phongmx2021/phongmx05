@@ -1,4 +1,5 @@
 ## Project Overview
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/phongmx2021/phongmx05/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/phongmx2021/phongmx05/tree/master)
 
 In this project we will apply the skills and knowledge which were developed that include:
 
@@ -26,9 +27,9 @@ We will develop a CI/CD pipeline for micro services applications with either blu
     $ make lint
     
     $ docker login -u $DOCKER_ID -p $DOCKER_PASSWORD
-    $ docker build -t hello_app -f ./app/Dockerfile .
-    $ docker tag hello_app phongmx/hello:${VERSION}
-    $ docker tag hello_app phongmx/hello:latest
+    $ docker build -t hello_application -f ./app/Dockerfile .
+    $ docker tag hello_application phongmx/hello:${VERSION}
+    $ docker tag hello_application phongmx/hello:latest
     $ docker push phongmx/hello:${VERSION}
     $ docker push phongmx/hello:latest
 
