@@ -1,0 +1,186 @@
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.1.2
+
+jobs:
+  run-lint:
+    docker:
+      - image: python:3.7.3-stretch
+    working_directory: ~/app
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - capstone-dependencies-{{ checksum "app/requirements.txt" }}
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m venv ~/.hello_app
+            source ~/.hello_app/bin/activate
+            cd app
+            make install
+            wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64
+            chmod +x /bin/hadolint
+      - save_cache:
+          paths:
+            - ./.hello_app
+          key: capstone-dependencies-{{ checksum "app/requirements.txt" }}
+      - run:
+          name: Run lint
+          command: |
+            source ~/.hello_app/bin/activate
+            cd app
+            make lint
+
+  build-and-publish-docker-image:
+    docker:
+      - image: circleci/python:3.7
+    working_directory: ~/app
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Login to Docker hub and publish Docker image
+          command: |
+            ls
+            export VERSION=$(cat app/version.txt)
+            docker login -u $DOCKER_ID -p $DOCKER_PASSWORD
+            
+            docker build -t hello_app -f ./app/Dockerfile .
+            docker tag hello_app phongmx/hello:${VERSION}
+            docker tag hello_app phongmx/hello:latest
+            
+            docker push phongmx/hello:${VERSION}
+            docker push phongmx/hello:latest
+
+  deploy-green:
+    docker:
+      - image: circleci/python:3.7
+    working_directory: ~/app
+    steps:
+      - checkout
+      - run:
+          name: Install awscli
+          command: |
+            sudo pip3 install awscli
+            sudo apt-get install gettext-base
+      - run:
+          name: Install aws-iam-authenticator
+          command: |
+            curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+            chmod +x ./aws-iam-authenticator
+            sudo mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+      - run:
+          name: Install kubectl
+          command: |
+            curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Prepare k8s templates
+          command: |
+            aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
+            kubectl config current-context
+      - run:
+          name: Deploy green
+          command: |
+            export VERSION=$(cat app/version.txt)
+            echo ${VERSION}
+            envsubst < kubernetes/green/deployment.yaml | kubectl apply --filename -
+            envsubst < kubernetes/green/service.yaml | kubectl apply --filename -
+
+  deploy-blue:
+    docker:
+      - image: circleci/python:3.7
+    working_directory: ~/app
+    steps:
+      - checkout
+      - run:
+          name: Install awscli
+          command: |
+            sudo pip3 install awscli
+            sudo apt-get install gettext-base
+      - run:
+          name: Install aws-iam-authenticator
+          command: |
+            curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+            chmod +x ./aws-iam-authenticator
+            sudo mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+      - run:
+          name: Install kubectl
+          command: |
+            curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Prepare k8s templates
+          command: |
+            aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
+            kubectl config current-context
+      - run:
+          name: Deploy blue
+          command: |
+            export VERSION=$(cat app/version.txt)
+            echo ${VERSION}
+            envsubst < kubernetes/blue/service.yaml | kubectl apply --filename -
+
+  remove-old-blue:
+    docker:
+      - image: circleci/python:3.7
+    working_directory: ~/app
+    steps:
+      - checkout
+      - run:
+          name: Install awscli
+          command: |
+            sudo pip3 install awscli
+            sudo apt-get install gettext-base
+      - run:
+          name: Install aws-iam-authenticator
+          command: |
+            curl -o aws-iam-authenticator curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/aws-iam-authenticator
+            chmod +x ./aws-iam-authenticator
+            sudo mv ./aws-iam-authenticator /usr/local/bin/aws-iam-authenticator
+      - run:
+          name: Install kubectl
+          command: |
+            curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.13.7/2019-06-11/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            sudo mv ./kubectl /usr/local/bin/kubectl
+      - run:
+          name: Prepare k8s templates
+          command: |
+            aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $CLUSTER_NAME
+            kubectl config current-context
+      - run:
+          name: Remove the old blue deployments and green service
+          command: |
+            export VERSION=$(cat app/version.txt)
+            
+            for deploy in $(kubectl get deployments -o jsonpath="{.items[*].metadata.name}");
+            do
+              if [[ $deploy != capstone-app-$VERSION ]];
+              then
+                echo $deploy
+                kubectl delete deployments $deploy
+              fi
+            done
+            
+            if kubectl get svc | grep capstone-app-green;
+            then
+              kubectl delete services capstone-app-green
+            fi
+
+workflows:
+  default:
+    jobs:
+      - run-lint
+      - build-and-publish-docker-image:
+          requires: [run-lint]
+      - deploy-green:
+          requires: [build-and-publish-docker-image]
+      - deploy-blue:
+          requires: [deploy-green]
+      - remove-old-blue:
+          requires: [deploy-blue]

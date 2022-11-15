@@ -1,0 +1,63 @@
+apiVersion: eksctl.io/v1alpha5
+availabilityZones:
+  - us-west-2a
+  - us-west-2c
+iam:
+  vpcResourceControllerPolicy: true
+  withOIDC: true
+kind: ClusterConfig
+metadata:
+  name: phongmx
+  region: us-west-2
+  version: "1.22"
+nodeGroups:
+  - amiFamily: AmazonLinux2
+    containerRuntime: dockerd
+    disableIMDSv1: false
+    disablePodIMDS: false
+    iam:
+      withAddonPolicies:
+        albIngress: false
+        appMesh: null
+        appMeshPreview: null
+        autoScaler: false
+        awsLoadBalancerController: false
+        certManager: false
+        cloudWatch: false
+        ebs: false
+        efs: false
+        externalDNS: false
+        fsx: false
+        imageBuilder: false
+        xRay: false
+    instanceSelector: {}
+    instanceType: t2.small
+    labels:
+      alpha.eksctl.io/cluster-name: phongmx
+      alpha.eksctl.io/nodegroup-name: node-groups
+    maxSize: 3
+    minSize: 2
+    name: node-groups
+    privateNetworking: false
+    securityGroups:
+      withLocal: true
+      withShared: true
+    ssh:
+      allow: true
+      publicKeyName: cicd
+    volumeIOPS: 3000
+    volumeSize: 30
+    volumeThroughput: 125
+    volumeType: gp3
+privateCluster:
+  enabled: false
+  skipEndpointCreation: false
+vpc:
+  autoAllocateIPv6: false
+  cidr: 192.168.0.0/16
+  clusterEndpoints:
+    privateAccess: false
+    publicAccess: true
+  manageSharedNodeSecurityGroupRules: true
+  nat:
+    gateway: Single
