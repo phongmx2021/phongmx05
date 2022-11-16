@@ -159,16 +159,16 @@ jobs:
             
             for deploy in $(kubectl get deployments -o jsonpath="{.items[*].metadata.name}");
             do
-              if [[ $deploy != capstone-app-$VERSION ]];
+              if [[ $deploy != hello_application-$VERSION ]];
               then
                 echo $deploy
                 kubectl delete deployments $deploy
               fi
             done
             
-            if kubectl get svc | grep capstone-app-green;
+            if kubectl get svc | grep hello_application-green;
             then
-              kubectl delete services capstone-app-green
+              kubectl delete services hello_application-green
             fi
 
 workflows:
