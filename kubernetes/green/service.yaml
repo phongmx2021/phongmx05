@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello_application-green
+  name: hello_app-green
 spec:
   ports:
     - port: 80
@@ -9,6 +9,6 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: hello_application
+    app: hello_app
     version: ${VERSION}
   type: LoadBalancer

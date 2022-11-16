@@ -9,7 +9,7 @@ kind: ClusterConfig
 metadata:
   name: phongmx
   region: us-west-1
-  version: "1.22"
+  version: "1.23"
 nodeGroups:
   - amiFamily: AmazonLinux2
     containerRuntime: dockerd

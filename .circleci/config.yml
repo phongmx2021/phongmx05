@@ -46,9 +46,9 @@ jobs:
             export VERSION=$(cat app/version.txt)
             docker login -u $DOCKER_ID -p $DOCKER_PASSWORD
             
-            docker build -t hello_application -f ./app/Dockerfile .
-            docker tag hello_application phongmx/hello:${VERSION}
-            docker tag hello_application phongmx/hello:latest
+            docker build -t hello_app -f ./app/Dockerfile .
+            docker tag hello_app phongmx/hello:${VERSION}
+            docker tag hello_app phongmx/hello:latest
             
             docker push phongmx/hello:${VERSION}
             docker push phongmx/hello:latest
@@ -159,16 +159,16 @@ jobs:
             
             for deploy in $(kubectl get deployments -o jsonpath="{.items[*].metadata.name}");
             do
-              if [[ $deploy != hello_application-$VERSION ]];
+              if [[ $deploy != hello_app-$VERSION ]];
               then
                 echo $deploy
                 kubectl delete deployments $deploy
               fi
             done
             
-            if kubectl get svc | grep hello_application-green;
+            if kubectl get svc | grep hello_app-green;
             then
-              kubectl delete services hello_application-green
+              kubectl delete services hello_app-green
             fi
 
 workflows:
