@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello_app
+  name: hello_app-${VERSION}
 spec:
   replicas: 1
   selector:
@@ -15,7 +15,7 @@ spec:
         version: ${VERSION}
     spec:
       containers:
-      - name: hello_app
-        image: phongmx/hello:${VERSION}
-        ports:
-        - containerPort: 80
+        - name: hello_app
+          image: phongmx/hello:${VERSION}
+          ports:
+            - containerPort: 80
