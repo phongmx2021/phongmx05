@@ -86,7 +86,9 @@ jobs:
           command: |
             export VERSION=$(cat app/version.txt)
             echo ${VERSION}
+            echo 111
             envsubst < kubernetes/green/deployment.yaml | kubectl apply --filename -
+            echo 123
             envsubst < kubernetes/green/service.yaml | kubectl apply --filename -
 
   deploy-blue:
