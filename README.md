@@ -20,16 +20,16 @@ We will develop a CI/CD pipeline for micro services applications with either blu
 3. Setup CircleCI pipeline
 
 ### Build and publish Docker image
-    $ python3 -m venv ~/.hello_app
-    $ source ~/.hello_app/bin/activate
+    $ python3 -m venv ~/.hello-app
+    $ source ~/.hello-app/bin/activate
     $ cd app
     $ make install
     $ make lint
     
     $ docker login -u $DOCKER_ID -p $DOCKER_PASSWORD
-    $ docker build -t hello_app -f ./app/Dockerfile .
-    $ docker tag hello_app phongmx/hello:${VERSION}
-    $ docker tag hello_app phongmx/hello:latest
+    $ docker build -t hello-app -f ./app/Dockerfile .
+    $ docker tag hello-app phongmx/hello:${VERSION}
+    $ docker tag hello-app phongmx/hello:latest
     $ docker push phongmx/hello:${VERSION}
     $ docker push phongmx/hello:latest
 
