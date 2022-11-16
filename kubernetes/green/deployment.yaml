@@ -15,7 +15,7 @@ spec:
         version: ${VERSION}
     spec:
       containers:
-      - name: hello-app
-        image: phongmx/hello:${VERSION}
-        ports:
-        - containerPort: 80
+        - name: hello-app
+          image: phongmx/hello:${VERSION}
+          ports:
+          - containerPort: 80
