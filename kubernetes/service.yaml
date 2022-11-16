@@ -10,5 +10,5 @@ spec:
     name: http
   selector:
     app: hello-app
-    version: ${VERSION}
+    version: 1.0.0
   type: LoadBalancer
